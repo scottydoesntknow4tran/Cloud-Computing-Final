@@ -12,6 +12,7 @@ import java.util.Set;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -103,11 +104,25 @@ public class WordConfCount{
 		private final static IntWritable one = new IntWritable(1);
 		private Text word = new Text();
 
-		public void map(Object ket, Text value, Context context
+		public void map(Object key, Text value, Context context
 			       ) throws IOException, InterruptedException {
-			//do nothing
+			StringTokenizer itr = new StringTokenizer(value);
+			String item = itr.nextToken();
+			String keyString;
+			int num = atoi(itr.nextToken());
+			if(item.contains(":")
+			{
+				keyString = item.substring(0, item.lastIndexOf(':'))
+			}
+			else
+			{
+				keyString = item;
+			}
 		}
 	}
+	
+	public static class ConfReducer
+		extends Reducer<Text, Text, Text, DoubleWritable
 
 	public static class IntSumReducer
 		extends Reducer<Text, IntWritable, Text, IntWritable> {
