@@ -24,8 +24,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.StringUtils;
 
 public class WordConfCount{
-
-
 	
 	public static class TokenizerMapper
 		extends Mapper<Object, Text, Text, IntWritable> {
@@ -37,6 +35,7 @@ public class WordConfCount{
 		private Configuration conf;
 		private BufferedReader fis;
 
+		//Places necessary control information into variables
 		public void setup(Context context) throws IOException, InterruptedException {
 			conf = context.getConfiguration();
 			caseSensitive = conf.getBoolean("wordcount.case.sensitive", true);
@@ -52,6 +51,7 @@ public class WordConfCount{
 			}
 		}
 
+		//Reads -skip file and adds patterns that are skipped
 		public void parseSkipFile(String fileName){
 			try {
 				fis = new BufferedReader(new FileReader(fileName));
@@ -65,6 +65,8 @@ public class WordConfCount{
 			}
 		}
 
+		//first map iteration
+		//Counts number of lines a given word or pair of words occurs on
 		public void map(Object key, Text value, Context context
 			       ) throws IOException, InterruptedException {
 			ArrayList<String> A = new ArrayList<String>();
@@ -104,13 +106,19 @@ public class WordConfCount{
 		private final static IntWritable one = new IntWritable(1);
 		private Text word = new Text();
 		private Text word2 = new Text();
-
+		
+		//second map iteration
+		//Gathers information from 1st stage reducer, compiles in a Text
+		//and writes to context
 		public void map(Object key, Text value, Context context
 			       ) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(value.toString());
-			String item = itr.nextToken();
 			String keyString;
+
+			String item = itr.nextToken();
 			int num = Integer.parseInt(itr.nextToken());
+			
+			//determines key
 			if(item.contains(":"))
 			{
 				keyString = item.substring(0, item.lastIndexOf(':'));
@@ -120,9 +128,19 @@ public class WordConfCount{
 				keyString = item;
 			}
 			word.set(keyString);
+			
 			String temp = item + ";" + num;
 			word2.set(temp);
 			context.write(word, word2);
+
+			//flips a:b -> b:a to note both directions of confidence
+			if(item.contains(":")){
+				temp = item.substring(item.lastIndexOf(':')+1) + ":" + keyString + ";" + num;
+				word2.set(temp);
+				temp = item.substring(item.lastIndexOf(":")+1);
+				word.set(temp);
+				context.write(word, word2);
+			}
 		}
 	}
 	
@@ -136,36 +154,49 @@ public class WordConfCount{
 		//output     "word1:word2"      DoubleWritable confidence
 
 		private DoubleWritable result = new DoubleWritable();
-
+		private Text word = new Text();
 		
+		//second stage reducer
+		//pulls number of key and number of pair to calculate confidence
+		//and writes calculation to context
 		public void reduce(Text key, Iterable<Text> values, Context context
 				) throws IOException, InterruptedException {
 			double keySum = 0;
 			double comboSum = 0;
 			String temp = "";
+
+			//use arraylist to allow for multiple iterations
+			ArrayList<String> valueList = new ArrayList<String>();
 			for(Text val : values){
-				temp = val.toString();
-				if(!temp.contains(":")){
-					keySum = Double.parseDouble(temp.substring(temp.lastIndexOf(';')+1));
+				valueList.add(val.toString());
+			}
+
+			//Measure number of key
+			for(String val : valueList){
+				if(!val.contains(":")){
+					keySum = Double.parseDouble(val.substring(val.lastIndexOf(';')+1));
 				}
 			}
 
-			for(Text val : values){
-				temp = val.toString();
-				if(temp.contains(":")){
-					String pair = temp.substring(0, temp.lastIndexOf(';'));
-					String pairNum = temp.substring(temp.lastIndexOf(';')+1);
+			//Measure number of all other pairs and calculate confidence
+			for(String val : valueList){
+				if(val.contains(":")){
+					String pair = val.substring(0, val.lastIndexOf(';'));
+					String pairNum = val.substring(val.lastIndexOf(';')+1);
 					comboSum = Integer.parseInt(pairNum);
 
-					Text t = new Text(pair);
-					result.set(comboSum/keySum);
-					context.write(t, result);
+					word.set(pair);
+					double conf = comboSum/keySum;
+					result.set(conf);
+					context.write(word, result);
 				}
 			}
 		}
 			
 	}
-
+	
+	//First stage reducer
+	//sums up number of each word and each pair within the document
 	public static class IntSumReducer
 		extends Reducer<Text, IntWritable, Text, IntWritable> {
 
@@ -187,8 +218,8 @@ public class WordConfCount{
 		Configuration conf = new Configuration();
 		GenericOptionsParser optionParser = new GenericOptionsParser(conf, args);
 		String[] remainingArgs = optionParser.getRemainingArgs();
-		if((remainingArgs.length != 2) && (remainingArgs.length != 4)) {
-			System.err.println("Usage: wordcount <in> <out> [-skip skipPatternFile]");
+		if((remainingArgs.length != 3) && (remainingArgs.length != 5)) {
+			System.err.println("Usage: wordcount <in> <out> <out2> [-skip skipPatternFile]");
 			System.exit(2);
 		}
 
@@ -211,7 +242,6 @@ public class WordConfCount{
 		FileInputFormat.addInputPath(job, new Path(args[1]));
 		FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
-
 		job.waitForCompletion(true); //first MapReduce job finishes here
 
 		Configuration confTwo = new Configuration();
@@ -221,14 +251,11 @@ public class WordConfCount{
  		job2.setReducerClass(ConfReducer.class);
  		job2.setOutputKeyClass(Text.class);
  		job2.setOutputValueClass(Text.class);
- 		FileInputFormat.addInputPath(job2, new Path(otherArgs.get(2)));
- 		FileOutputFormat.setOutputPath(job2, new Path(otherArgs.get(3)));
+ 		FileInputFormat.addInputPath(job2, new Path(args[2]));
+ 		FileOutputFormat.setOutputPath(job2, new Path(args[3]));
 		
 		job2.waitForCompletion(true); //second MapReduce job finishes 
 
 		System.exit(job2.waitForCompletion(true) ? 0:1); //exit
-
-
-
 	}
 }
