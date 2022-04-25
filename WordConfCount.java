@@ -127,7 +127,24 @@ public class WordConfCount{
 	}
 	
 	public static class ConfReducer
-		extends Reducer<Text, Text, Text, DoubleWritable
+		extends Reducer<Text, Text, Text, DoubleWritable>{
+		
+		//key is "word1"
+		//value is "word1:word2:numword1word2"
+		//or "word1:numword1"
+		
+		//output     "word1:word2"      DoubleWritable confidence
+		
+		public void reduce(Text key, Iterable<Text> values, Context context
+				) throws IOException, InteruppedException {
+			int keySum = 0;
+			int comboSum = 0;
+			String item;
+			
+			for(
+		}
+			
+	}
 
 	public static class IntSumReducer
 		extends Reducer<Text, IntWritable, Text, IntWritable> {
