@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.atoi;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -107,7 +108,7 @@ public class WordConfCount{
 
 		public void map(Object key, Text value, Context context
 			       ) throws IOException, InterruptedException {
-			StringTokenizer itr = new StringTokenizer(value);
+			StringTokenizer itr = new StringTokenizer(value.toString());
 			String item = itr.nextToken();
 			String keyString;
 			int num = atoi(itr.nextToken());
@@ -139,26 +140,27 @@ public class WordConfCount{
 
 		
 		public void reduce(Text key, Iterable<Text> values, Context context
-				) throws IOException, InteruppedException {
+				) throws IOException, InterruptedException {
 			double keySum = 0;
 			double comboSum = 0;
 			String temp = "";
 			for(Text val : values){
 				temp = val.toString();
-				if(!temp.contains(':')){
+				if(!temp.contains(":")){
 					keySum = temp.substring(temp.lastIndexOf(';')+1);
 				}
 			}
 
 			for(Text val : values){
 				temp = val.toString();
-				if(temp.contains(':')){
+				if(temp.contains(":")){
 					String pair = temp.substring(0, temp.lastIndexOf(';'));
 					String pairNum = temp.substring(temp.lastIndexOf(';')+1);
 					comboSum = atoi(pairNum);
 
+					Text t = newText(pair);
 					result.set(comboSum/keySum);
-					context.write(pair, result);
+					context.write(t, result);
 				}
 			}
 		}
@@ -215,9 +217,9 @@ public class WordConfCount{
 
 		Configuration confTwo = new Configuration();
  		Job job2 = Job.getInstance(confTwo, "Conf step two");
- 		job2.setJarByClass(Conf.class);
- 		job2.setMapperClass(MapTwo.class);
- 		job2.setReducerClass(ReduceTwo.class);
+ 		job2.setJarByClass(WordConfCount.class);
+ 		job2.setMapperClass(ConfMap.class);
+ 		job2.setReducerClass(ConfReducer.class);
  		job2.setOutputKeyClass(Text.class);
  		job2.setOutputValueClass(Text.class);
  		FileInputFormat.addInputPath(job2, new Path(otherArgs.get(2)));
