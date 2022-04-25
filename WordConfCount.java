@@ -190,6 +190,24 @@ public class WordConfCount{
 		}
 		FileInputFormat.addInputPath(job, new Path(args[1]));
 		FileOutputFormat.setOutputPath(job, new Path(args[2]));
-		System.exit(job.waitForCompletion(true) ? 0:1);
+
+
+		job.waitForCompletion(true); //first MapReduce job finishes here
+
+		Configuration confTwo = new Configuration();
+ 		Job job2 = Job.getInstance(confTwo, "Conf step two");
+ 		job2.setJarByClass(Conf.class);
+ 		job2.setMapperClass(MapTwo.class);
+ 		job2.setReducerClass(ReduceTwo.class);
+ 		job2.setOutputKeyClass(Text.class);
+ 		job2.setOutputValueClass(Text.class);
+ 		FileInputFormat.addInputPath(job2, new Path(otherArgs.get(2)));
+ 		FileOutputFormat.setOutputPath(job2, new Path(otherArgs.get(3)));
+		
+		job2.waitForCompletion(true); //second MapReduce job finishes 
+		System.exit(job2.waitForCompletion(true) ? 0:1); //exit
+
+
+
 	}
 }
