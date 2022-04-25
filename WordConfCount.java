@@ -111,18 +111,18 @@ public class WordConfCount{
 			String item = itr.nextToken();
 			String keyString;
 			int num = atoi(itr.nextToken());
-			if(item.contains(":")
+			if(item.contains(":");
 			{
-				keyString = item.substring(0, item.lastIndexOf(':'))
+				keyString = item.substring(0, item.lastIndexOf(':'));
 			}
 			else
 			{
 				keyString = item;
 			}
 			word.set(keyString);
-			String temp = item + ";" + num
+			String temp = item + ";" + num;
 			word2.set(temp);
-			context.write(word, word2)
+			context.write(word, word2);
 		}
 	}
 	
@@ -146,7 +146,7 @@ public class WordConfCount{
 			for(Text val : values){
 				temp = val.toString();
 				if(!temp.contains(':')){
-					keySum = temp.substring(temp.lastIndexOf(;)+1);
+					keySum = temp.substring(temp.lastIndexOf(';')+1);
 				}
 			}
 
@@ -224,7 +224,7 @@ public class WordConfCount{
  		FileOutputFormat.setOutputPath(job2, new Path(otherArgs.get(3)));
 		
 		job2.waitForCompletion(true); //second MapReduce job finishes 
-		
+
 		System.exit(job2.waitForCompletion(true) ? 0:1); //exit
 
 
