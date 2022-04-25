@@ -134,6 +134,8 @@ public class WordConfCount{
 		//or "word1:numword1"
 		
 		//output     "word1:word2"      DoubleWritable confidence
+
+		private IntWritable result = new DoubleWritable();
 		
 		public void reduce(Text key, Iterable<Text> values, Context context
 				) throws IOException, InteruppedException {
@@ -141,7 +143,17 @@ public class WordConfCount{
 			int comboSum = 0;
 			String item;
 			
-			for(
+
+
+			
+			for(DoubleWritable val : values){
+				
+				
+			}
+
+			result.set(keySum);
+			result.set(comboSum);
+			context.write(key, result);
 		}
 			
 	}
