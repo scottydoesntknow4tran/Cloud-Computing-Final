@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.atoi;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -111,7 +110,7 @@ public class WordConfCount{
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			String item = itr.nextToken();
 			String keyString;
-			int num = atoi(itr.nextToken());
+			int num = Integer.parseInt(itr.nextToken());
 			if(item.contains(":"))
 			{
 				keyString = item.substring(0, item.lastIndexOf(':'));
@@ -147,7 +146,7 @@ public class WordConfCount{
 			for(Text val : values){
 				temp = val.toString();
 				if(!temp.contains(":")){
-					keySum = temp.substring(temp.lastIndexOf(';')+1);
+					keySum = Double.parseDouble(temp.substring(temp.lastIndexOf(';')+1));
 				}
 			}
 
@@ -156,9 +155,9 @@ public class WordConfCount{
 				if(temp.contains(":")){
 					String pair = temp.substring(0, temp.lastIndexOf(';'));
 					String pairNum = temp.substring(temp.lastIndexOf(';')+1);
-					comboSum = atoi(pairNum);
+					comboSum = Integer.parseInt(pairNum);
 
-					Text t = newText(pair);
+					Text t = new Text(pair);
 					result.set(comboSum/keySum);
 					context.write(t, result);
 				}
