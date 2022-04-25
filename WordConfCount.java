@@ -147,9 +147,8 @@ public class WordConfCount{
 				keySum++;
 				comboSum += atoi(pairNum);
 			}
-			result.set(keySum);
-			result.set(comboSum);
-			context.write(pair, comboSum/keySum);
+			result.set(comboSum/keySum);
+			context.write(pair, result);
 		}
 			
 	}
