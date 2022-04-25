@@ -139,21 +139,17 @@ public class WordConfCount{
 		
 		public void reduce(Text key, Iterable<Text> values, Context context
 				) throws IOException, InteruppedException {
-			int keySum = 0;
-			int comboSum = 0;
-			String item;
-			
-
-
-			
+			double keySum = 0;
+			double comboSum = 0;
 			for(DoubleWritable val : values){
-				
-				
+				String pair = val.substring(0, values.lastIndexOf(':'));
+				String pairNum = val.substring(values.lastIndexOf(':'), values.length());
+				keySum++;
+				comboSum += atoi(pairNum);
 			}
-
 			result.set(keySum);
 			result.set(comboSum);
-			context.write(key, result);
+			context.write(pair, comboSum/keySum);
 		}
 			
 	}
