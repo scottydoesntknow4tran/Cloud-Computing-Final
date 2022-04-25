@@ -120,7 +120,7 @@ public class WordConfCount{
 				keyString = item;
 			}
 			word.set(keyString);
-			String temp = item + ":" + num
+			String temp = item + ";" + num
 			word2.set(temp);
 			context.write(word, word2)
 		}
@@ -130,25 +130,37 @@ public class WordConfCount{
 		extends Reducer<Text, Text, Text, DoubleWritable>{
 		
 		//key is "word1"
-		//value is "word1:word2:numword1word2"
-		//or "word1:numword1"
+		//value is "word1:word2;numword1word2"
+		//or "word1;numword1"
 		
 		//output     "word1:word2"      DoubleWritable confidence
 
-		private IntWritable result = new DoubleWritable();
+		private DoubleWritable result = new DoubleWritable();
+
 		
 		public void reduce(Text key, Iterable<Text> values, Context context
 				) throws IOException, InteruppedException {
 			double keySum = 0;
 			double comboSum = 0;
-			for(DoubleWritable val : values){
-				String pair = val.substring(0, values.lastIndexOf(':'));
-				String pairNum = val.substring(values.lastIndexOf(':'), values.length());
-				keySum++;
-				comboSum += atoi(pairNum);
+			String temp = "";
+			for(Text val : values){
+				temp = val.toString();
+				if(!temp.contains(':')){
+					keySum = temp.substring(temp.lastIndexOf(;)+1);
+				}
 			}
-			result.set(comboSum/keySum);
-			context.write(pair, result);
+
+			for(Text val : values){
+				temp = val.toString();
+				if(temp.contains(':')){
+					String pair = temp.substring(0, temp.lastIndexOf(';'));
+					String pairNum = temp.substring(temp.lastIndexOf(';')+1);
+					comboSum = atoi(pairNum);
+
+					result.set(comboSum/keySum);
+					context.write(pair, result);
+				}
+			}
 		}
 			
 	}
@@ -212,6 +224,7 @@ public class WordConfCount{
  		FileOutputFormat.setOutputPath(job2, new Path(otherArgs.get(3)));
 		
 		job2.waitForCompletion(true); //second MapReduce job finishes 
+		
 		System.exit(job2.waitForCompletion(true) ? 0:1); //exit
 
 
