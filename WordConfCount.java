@@ -111,7 +111,7 @@ public class WordConfCount{
 			String item = itr.nextToken();
 			String keyString;
 			int num = atoi(itr.nextToken());
-			if(item.contains(":");
+			if(item.contains(":"))
 			{
 				keyString = item.substring(0, item.lastIndexOf(':'));
 			}
